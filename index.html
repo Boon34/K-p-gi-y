@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hũ Kẹo Atomic Habit</title>
+    <style>
+        :root {
+            --jar-color-1: #FF9E9E;
+            --jar-color-2: #A0E7E5;
+            --candy-color: #FFD700;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        h1 {
+            color: #FF6B6B;
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+        
+        .jars-container {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+            position: relative;
+        }
+        
+        .jar {
+            width: 150px;
+            height: 220px;
+            border-radius: 10px 10px 60px 60px;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s;
+            box-shadow: inset 0 -20px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+        }
+        
+        #jar1 {
+            background: var(--jar-color-1);
+        }
+        
+        #jar2 {
+            background: var(--jar-color-2);
+        }
+        
+        .jar:hover {
+            transform: translateY(-5px);
+        }
+        
+        .jar-label {
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            color: #333;
+        }
+        
+        .candies {
+            width: 90%;
+            height: 150px;
+            overflow: hidden;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-content: flex-end;
+            gap: 5px;
+            padding-bottom: 10px;
+        }
+        
+        .candy {
+            font-size: 24px;
+            transition: all 0.5s;
+            user-select: none;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .stat-box {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #FF6B6B;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .reset-btn {
+            background: #FF6B6B;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+        
+        .reset-btn:hover {
+            background: #FF8E8E;
+        }
+        
+        @keyframes candyFly {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            50% { transform: translate(var(--fly-x), var(--fly-y)) scale(1.5); opacity: 0.8; }
+            100% { transform: translate(var(--fly-end-x), var(--fly-end-y)) scale(0.5); opacity: 0; }
+        }
+        
+        .flying-candy {
+            position: absolute;
+            font-size: 24px;
+            pointer-events: none;
+            z-index: 100;
+            animation: candyFly 0.8s forwards;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: var(--c);
+            opacity: 0.8;
+            animation: confettiFall 3s linear forwards;
+        }
+        
+        @keyframes confettiFall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(500px) rotate(360deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>HŨ KẸO ATOMIC HABIT</h1>
+        <p class="subtitle">Mỗi ngày chuyển 1 kẹo - Xây dựng thói quen nhỏ!</p>
+        
+        <div class="jars-container">
+            <div class="jar" id="jar1" onclick="transferCandy(1)">
+                <div class="jar-label">Hôm Nay</div>
+                <div class="candies" id="candies1"></div>
+            </div>
+            
+            <div class="jar" id="jar2" onclick="transferCandy(2)">
+                <div class="jar-label">Thành Tích</div>
+                <div class="candies" id="candies2"></div>
+            </div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-value" id="streak">0</div>
+                <div class="stat-label">Ngày liên tục</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="completion">0%</div>
+                <div class="stat-label">Hoàn thành</div>
+            </div>
+        </div>
+        
+        <button class="reset-btn" onclick="resetJars()">Bắt đầu lại</button>
+    </div>
+
+    <audio id="candySound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3" preload="auto"></audio>
+
+    <script>
+        // Khởi tạo dữ liệu
+        let habitData = {
+            candies: [10, 0], // [Hũ 1, Hũ 2]
+            streak: 0,
+            lastTransferDate: null
+        };
+
+        // Lấy dữ liệu từ localStorage (nếu có)
+        const savedData = localStorage.getItem('atomicHabitJar');
+        if (savedData) {
+            habitData = JSON.parse(savedData);
+            
+            // Kiểm tra nếu đã qua ngày mới
+            const today = new Date().toDateString();
+            if (habitData.lastTransferDate !== today) {
+                // Reset hũ 1 về 10 kẹo nếu là ngày mới
+                habitData.candies[0] = 10;
+            }
+        }
+
+        // Hiển thị ban đầu
+        updateJars();
+        updateStats();
+
+        // Hàm chuyển kẹo
+        function transferCandy(fromJar) {
+            const toJar = fromJar === 1 ? 2 : 1;
+            
+            // Kiểm tra nếu hũ nguồn còn kẹo
+            if (habitData.candies[fromJar - 1] > 0) {
+                // Giảm kẹo ở hũ nguồn
+                habitData.candies[fromJar - 1]--;
+                
+                // Tạo hiệu ứng kẹo bay
+                createFlyingCandy(fromJar, toJar);
+                
+                // Phát âm thanh
+                playCandySound();
+                
+                // Cập nhật streak nếu chuyển từ hũ 1 sang 2
+                if (fromJar === 1) {
+                    updateStreak();
+                }
+                
+                // Lưu thời gian chuyển cuối cùng
+                habitData.lastTransferDate = new Date().toDateString();
+                
+                // Lưu vào localStorage
+                localStorage.setItem('atomicHabitJar', JSON.stringify(habitData));
+                
+                // Cập nhật giao diện sau khi hiệu ứng hoàn thành
+                setTimeout(() => {
+                    habitData.candies[toJar - 1]++;
+                    updateJars();
+                    updateStats();
+                    
+                    // Hiệu ứng khi hoàn thành 1 ngày (chuyển hết 10 kẹo)
+                    if (habitData.candies[0] === 0 && habitData.candies[1] === 10) {
+                        celebrateCompletion();
+                    }
+                }, 800);
+            }
+        }
+
+        // Tạo hiệu ứng kẹo bay
+        function createFlyingCandy(fromJar, toJar) {
+            const fromElement = document.getElementById(`jar${fromJar}`);
+            const toElement = document.getElementById(`jar${toJar}`);
+            
+            const candy = document.createElement('div');
+            candy.className = 'flying-candy';
+            candy.innerHTML = '🍬';
+            
+            // Tính toán vị trí bay
+            const fromRect = fromElement.getBoundingClientRect();
+            const toRect = toElement.getBoundingClientRect();
+            
+            const startX = fromRect.left + fromRect.width / 2;
+            const startY = fromRect.top + fromRect.height / 2;
+            const endX = toRect.left + toRect.width / 2;
+            const endY = toRect.top + toRect.height / 2;
+            
+            // Đặt biến CSS để điều khiển animation
+            candy.style.setProperty('--fly-x', `${(endX - startX) / 2}px`);
+            candy.style.setProperty('--fly-y', `-100px`);
+            candy.style.setProperty('--fly-end-x', `${endX - startX}px`);
+            candy.style.setProperty('--fly-end-y', `${endY - startY}px`);
+            
+            candy.style.left = `${startX}px`;
+            candy.style.top = `${startY}px`;
+            
+            document.body.appendChild(candy);
+            
+            // Tự động xóa sau khi animation kết thúc
+            setTimeout(() => {
+                candy.remove();
+            }, 1000);
+        }
+
+        // Cập nhật hiển thị các hũ kẹo
+        function updateJars() {
+            const candies1 = document.getElementById('candies1');
+            const candies2 = document.getElementById('candies2');
+            
+            candies1.innerHTML = '';
+            candies2.innerHTML = '';
+            
+            // Thêm kẹo vào hũ 1
+            for (let i = 0; i < habitData.candies[0]; i++) {
+                const candy = document.createElement('div');
+                candy.className = 'candy';
+                candy.innerHTML = '🍬';
+                candies1.appendChild(candy);
+            }
+            
+            // Thêm kẹo vào hũ 2
+            for (let i = 0; i < habitData.candies[1]; i++) {
+                const candy = document.createElement('div');
+                candy.className = 'candy';
+                candy.innerHTML = '🍬';
+                candies2.appendChild(candy);
+            }
+        }
+
+        // Cập nhật streak
+        function updateStreak() {
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            // Nếu lần chuyển cuối cùng là hôm qua => tăng streak
+            if (habitData.lastTransferDate === yesterday.toDateString()) {
+                habitData.streak++;
+            } 
+            // Nếu không có dữ liệu hoặc đã quá 1 ngày => reset streak
+            else if (!habitData.lastTransferDate || 
+                     new Date(habitData.lastTransferDate).toDateString() !== yesterday.toDateString()) {
+                habitData.streak = 1;
+            }
+            
+            updateStats();
+        }
+
+        // Cập nhật thống kê
+        function updateStats() {
+            document.getElementById('streak').textContent = habitData.streak;
+            
+            const completionPercent = Math.round((habitData.candies[1] / 10) * 100);
+            document.getElementById('completion').textContent = `${completionPercent}%`;
+        }
+
+        // Phát âm thanh
+        function playCandySound() {
+            const sound = document.getElementById('candySound');
+            sound.currentTime = 0;
+            sound.play();
+        }
+
+        // Hiệu ứng khi hoàn thành 1 ngày
+        function celebrateCompletion() {
+            // Tạo confetti
+            const colors = ['#FF6B6B', '#A0E7E5', '#FFD700', '#B5EAEA'];
+            
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.setProperty('--c', colors[Math.floor(Math.random() * colors.length)]);
+                confetti.style.left = `${Math.random() * 100}vw`;
+                confetti.style.animationDuration = `${Math.random() * 2 + 1}s`;
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => {
+                    confetti.remove();
+                }, 3000);
+            }
+            
+            // Phát âm thanh ăn mừng
+            playCandySound();
+        }
+
+        // Reset các hũ
+        function resetJars() {
+            habitData.candies = [10, 0];
+            updateJars();
+            updateStats();
+            localStorage.setItem('atomicHabitJar', JSON.stringify(habitData));
+        }
+    </script>
+</body>
+</html>
