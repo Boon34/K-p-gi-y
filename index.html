@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hũ Kẹo Atomic Habit</title>
+    <title>Hũ Kẹo Atomic Habit - Tùy Chỉnh</title>
     <style>
         :root {
             --jar-color-1: #FF9E9E;
@@ -44,6 +44,35 @@
             color: #666;
             margin-bottom: 30px;
             font-size: 1rem;
+        }
+        
+        .setup-panel {
+            margin-bottom: 20px;
+        }
+        
+        .setup-panel input {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            width: 80px;
+            text-align: center;
+            font-size: 1rem;
+        }
+        
+        .setup-panel button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-left: 10px;
+            transition: background 0.3s;
+        }
+        
+        .setup-panel button:hover {
+            background: #45a049;
         }
         
         .jars-container {
@@ -171,37 +200,53 @@
             0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
             100% { transform: translateY(500px) rotate(360deg); opacity: 0; }
         }
+        
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>HŨ KẸO ATOMIC HABIT</h1>
-        <p class="subtitle">Mỗi ngày chuyển 1 kẹo - Xây dựng thói quen nhỏ!</p>
+        <p class="subtitle">Tùy chỉnh số kẹo - Xây dựng thói quen nhỏ mỗi ngày!</p>
         
-        <div class="jars-container">
-            <div class="jar" id="jar1" onclick="transferCandy(1)">
-                <div class="jar-label">Hôm Nay</div>
-                <div class="candies" id="candies1"></div>
+        <div class="setup-panel" id="setupPanel">
+            <p>Nhập số kẹo mục tiêu mỗi ngày:</p>
+            <input type="number" id="targetCandies" min="1" value="10">
+            <button onclick="startHabit()">Bắt đầu</button>
+        </div>
+        
+        <div id="habitPanel" class="hidden">
+            <div class="jars-container">
+                <div class="jar" id="jar1" onclick="transferCandy(1)">
+                    <div class="jar-label">Hôm Nay</div>
+                    <div class="candies" id="candies1"></div>
+                </div>
+                
+                <div class="jar" id="jar2" onclick="transferCandy(2)">
+                    <div class="jar-label">Thành Tích</div>
+                    <div class="candies" id="candies2"></div>
+                </div>
             </div>
             
-            <div class="jar" id="jar2" onclick="transferCandy(2)">
-                <div class="jar-label">Thành Tích</div>
-                <div class="candies" id="candies2"></div>
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-value" id="streak">0</div>
+                    <div class="stat-label">Ngày liên tục</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="completion">0%</div>
+                    <div class="stat-label">Hoàn thành</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="progress">0/10</div>
+                    <div class="stat-label">Tiến độ</div>
+                </div>
             </div>
+            
+            <button class="reset-btn" onclick="resetHabit()">Thiết lập lại</button>
         </div>
-        
-        <div class="stats">
-            <div class="stat-box">
-                <div class="stat-value" id="streak">0</div>
-                <div class="stat-label">Ngày liên tục</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-value" id="completion">0%</div>
-                <div class="stat-label">Hoàn thành</div>
-            </div>
-        </div>
-        
-        <button class="reset-btn" onclick="resetJars()">Bắt đầu lại</button>
     </div>
 
     <audio id="candySound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3" preload="auto"></audio>
@@ -209,27 +254,53 @@
     <script>
         // Khởi tạo dữ liệu
         let habitData = {
-            candies: [10, 0], // [Hũ 1, Hũ 2]
+            target: 10,
+            candies: [0, 0], // [Hũ 1, Hũ 2]
             streak: 0,
             lastTransferDate: null
         };
 
         // Lấy dữ liệu từ localStorage (nếu có)
-        const savedData = localStorage.getItem('atomicHabitJar');
+        const savedData = localStorage.getItem('customAtomicHabitJar');
         if (savedData) {
             habitData = JSON.parse(savedData);
+            document.getElementById('setupPanel').classList.add('hidden');
+            document.getElementById('habitPanel').classList.remove('hidden');
             
             // Kiểm tra nếu đã qua ngày mới
             const today = new Date().toDateString();
             if (habitData.lastTransferDate !== today) {
-                // Reset hũ 1 về 10 kẹo nếu là ngày mới
-                habitData.candies[0] = 10;
+                // Reset hũ 1 về số lượng target nếu là ngày mới
+                habitData.candies[0] = habitData.target;
             }
+            
+            updateJars();
+            updateStats();
         }
 
-        // Hiển thị ban đầu
-        updateJars();
-        updateStats();
+        // Bắt đầu thói quen mới
+        function startHabit() {
+            const targetInput = document.getElementById('targetCandies');
+            const targetValue = parseInt(targetInput.value);
+            
+            if (targetValue > 0) {
+                habitData = {
+                    target: targetValue,
+                    candies: [targetValue, 0],
+                    streak: 0,
+                    lastTransferDate: null
+                };
+                
+                document.getElementById('setupPanel').classList.add('hidden');
+                document.getElementById('habitPanel').classList.remove('hidden');
+                
+                updateJars();
+                updateStats();
+                saveData();
+            } else {
+                alert('Vui lòng nhập số kẹo lớn hơn 0!');
+            }
+        }
 
         // Hàm chuyển kẹo
         function transferCandy(fromJar) {
@@ -254,8 +325,8 @@
                 // Lưu thời gian chuyển cuối cùng
                 habitData.lastTransferDate = new Date().toDateString();
                 
-                // Lưu vào localStorage
-                localStorage.setItem('atomicHabitJar', JSON.stringify(habitData));
+                // Lưu dữ liệu
+                saveData();
                 
                 // Cập nhật giao diện sau khi hiệu ứng hoàn thành
                 setTimeout(() => {
@@ -263,8 +334,8 @@
                     updateJars();
                     updateStats();
                     
-                    // Hiệu ứng khi hoàn thành 1 ngày (chuyển hết 10 kẹo)
-                    if (habitData.candies[0] === 0 && habitData.candies[1] === 10) {
+                    // Hiệu ứng khi hoàn thành
+                    if (habitData.candies[1] === habitData.target) {
                         celebrateCompletion();
                     }
                 }, 800);
@@ -346,16 +417,17 @@
                      new Date(habitData.lastTransferDate).toDateString() !== yesterday.toDateString()) {
                 habitData.streak = 1;
             }
-            
-            updateStats();
         }
 
         // Cập nhật thống kê
         function updateStats() {
             document.getElementById('streak').textContent = habitData.streak;
             
-            const completionPercent = Math.round((habitData.candies[1] / 10) * 100);
+            const completionPercent = Math.round((habitData.candies[1] / habitData.target) * 100);
             document.getElementById('completion').textContent = `${completionPercent}%`;
+            
+            document.getElementById('progress').textContent = 
+                `${habitData.candies[1]}/${habitData.target}`;
         }
 
         // Phát âm thanh
@@ -365,7 +437,7 @@
             sound.play();
         }
 
-        // Hiệu ứng khi hoàn thành 1 ngày
+        // Hiệu ứng khi hoàn thành
         function celebrateCompletion() {
             // Tạo confetti
             const colors = ['#FF6B6B', '#A0E7E5', '#FFD700', '#B5EAEA'];
@@ -387,12 +459,19 @@
             playCandySound();
         }
 
-        // Reset các hũ
-        function resetJars() {
-            habitData.candies = [10, 0];
-            updateJars();
-            updateStats();
-            localStorage.setItem('atomicHabitJar', JSON.stringify(habitData));
+        // Lưu dữ liệu
+        function saveData() {
+            localStorage.setItem('customAtomicHabitJar', JSON.stringify(habitData));
+        }
+
+        // Reset thói quen
+        function resetHabit() {
+            if (confirm('Bạn có chắc muốn thiết lập lại từ đầu? Dữ liệu hiện tại sẽ bị xóa.')) {
+                localStorage.removeItem('customAtomicHabitJar');
+                document.getElementById('habitPanel').classList.add('hidden');
+                document.getElementById('setupPanel').classList.remove('hidden');
+                document.getElementById('targetCandies').value = habitData.target;
+            }
         }
     </script>
 </body>
